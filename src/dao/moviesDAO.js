@@ -300,13 +300,27 @@ export default class MoviesDAO {
 
       // TODO Ticket: Get Comments
       // Implement the required pipeline.
-      const pipeline = [
+      let pipeline = [
         {
           $match: {
             _id: ObjectId(id),
           },
         },
+        {
+          $lookup: {
+            from: "comments",
+            let: { movieId: "$_id" },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$movie_id", "$$movieId"] } } },
+              {
+                $sort: { date: -1 },
+              },
+            ],
+            as: "comments",
+          },
+        },
       ]
+
       return await movies.aggregate(pipeline).next()
     } catch (e) {
       /**
